@@ -3,8 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Okos otthon doboz – QR leltár</title>
+<title>Gokart terem leltár – Jendrassik Racing Team</title>
 <script src="https://accounts.google.com/gsi/client" async></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Titillium+Web:wght@400;600;700;900&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#0b0b0d">
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -97,22 +100,113 @@
   #login .box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;max-width:380px;width:100%;text-align:center}
   #login h2{margin:0 0 6px;font-size:20px}
   #gbtn{display:flex;justify-content:center;margin:18px 0 8px;min-height:44px}
+
+  /* ======== Jendrassik Racing Team: fekete–piros ======== */
+  :root{
+    color-scheme:dark;
+    --bg:#0b0b0d; --card:#16161b; --card2:#1f1f25; --ink:#f5f5f7; --mute:#9b9ba8; --line:#2b2b33;
+    --acc:#e10600; --acc-soft:rgba(225,6,0,.16);
+    --ok:#22c55e; --ok-soft:rgba(34,197,94,.16); --bad:#ff3b30; --bad-soft:rgba(255,59,48,.17);
+    --warn:#f5a524; --warn-soft:rgba(245,165,36,.17); --out:#b69bff; --out-soft:rgba(167,139,250,.17);
+    --red:linear-gradient(135deg,#ff2a1a 0%,#d40000 55%,#8a0000 100%);
+    --shadow:0 10px 28px rgba(0,0,0,.5); --r:14px;
+    --carbon:linear-gradient(27deg,#141417 5px,transparent 5px) 0 5px,linear-gradient(207deg,#141417 5px,transparent 5px) 10px 0,linear-gradient(27deg,#1c1c20 5px,transparent 5px) 0 10px,linear-gradient(207deg,#1c1c20 5px,transparent 5px) 10px 5px,linear-gradient(90deg,#18181b 10px,transparent 10px),linear-gradient(#19191d 25%,#161619 25%,#161619 50%,transparent 50%,transparent 75%,#1e1e22 75%,#1e1e22);
+  }
+  html,body{font-family:'Titillium Web',system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);
+    background:radial-gradient(700px 380px at 50% -120px,rgba(225,6,0,.28),transparent 70%),var(--bg);background-attachment:fixed}
+  .sub{color:var(--mute)}
+  a{color:#ff5a4f}
+  header.hero{background:var(--carbon);background-color:#131316;background-size:20px 20px;border:1px solid #2a2a30;border-radius:18px;padding:16px 16px 26px;margin:2px 0 12px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+  header.hero:before{content:"";position:absolute;top:0;right:-40px;width:170px;height:100%;background:var(--red);transform:skewX(-22deg);opacity:.95;box-shadow:-14px 0 0 rgba(225,6,0,.35),-28px 0 0 rgba(225,6,0,.15)}
+  header.hero:after{content:"";position:absolute;left:0;right:0;bottom:0;height:12px;background:repeating-conic-gradient(#f5f5f7 0 25%,#0b0b0d 0 50%) 0 0/12px 12px;opacity:.9}
+  .brand{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+  .logo{width:50px;height:50px;border-radius:12px;background:var(--red);display:grid;place-items:center;font-size:26px;flex:0 0 auto;box-shadow:0 6px 18px rgba(225,6,0,.45)}
+  .team{font-family:'Russo One',sans-serif;font-size:11px;letter-spacing:.18em;color:#ff4d40}
+  header.hero h1{font-family:'Russo One',sans-serif;font-size:23px;letter-spacing:.02em;text-transform:uppercase;margin:0;line-height:1.1;transform:skewX(-8deg);transform-origin:left}
+  header.hero .sub{position:relative;z-index:1;margin-top:8px;max-width:70%}
+  header.hero #lastStatus{position:relative;z-index:1}
+  header.hero .status{background:rgba(0,0,0,.55);border:1px solid #33333b;color:var(--ink);border-radius:12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  #boxBar{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 12px;scrollbar-width:none}
+  #boxBar::-webkit-scrollbar{display:none}
+  .boxchip{flex:0 0 auto;min-width:150px;text-align:left;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:10px 12px;font:inherit;cursor:pointer;position:relative;box-shadow:var(--shadow)}
+  .boxchip b{display:block;font-family:'Russo One',sans-serif;font-weight:400;font-size:14px;letter-spacing:.02em;text-transform:uppercase}
+  .boxchip span{font-size:12.5px;color:var(--mute)}
+  .boxchip i{position:absolute;top:10px;right:10px;width:10px;height:10px;border-radius:50%;background:#55555f}
+  .boxchip i.ok{background:var(--ok);box-shadow:0 0 8px var(--ok)} .boxchip i.bad{background:var(--bad);box-shadow:0 0 8px var(--bad)}
+  .boxchip.on{border-color:#ff2a1a;background:linear-gradient(180deg,rgba(225,6,0,.22),rgba(225,6,0,.06)),var(--card);box-shadow:0 0 0 1px #ff2a1a,0 8px 22px rgba(225,6,0,.3)}
+  .boxlabel{font-family:'Russo One',sans-serif;font-size:12px;letter-spacing:.14em;color:var(--mute);margin:2px 4px 6px;text-transform:uppercase}
+  nav{background:var(--bg);padding:2px 2px 12px;gap:8px}
+  nav button{border:1px solid var(--line);background:var(--card);color:#d6d6dc;padding:10px 16px;font-weight:700;border-radius:10px;text-transform:uppercase;letter-spacing:.04em;font-size:13.5px}
+  nav button.on{background:var(--red);border-color:#ff2a1a;color:#fff;box-shadow:0 6px 18px rgba(225,6,0,.4)}
+  .card{background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:var(--r)}
+  .seg{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:5px}
+  .seg button{color:var(--mute);border-radius:10px;text-transform:uppercase;letter-spacing:.03em}
+  .seg button.on{background:var(--red);color:#fff;box-shadow:0 6px 16px rgba(225,6,0,.35)}
+  .btn{background:var(--card2);border:1px solid #34343c;color:var(--ink);border-radius:11px;font-weight:700}
+  .btn.primary{background:var(--red);border:0;color:#fff;box-shadow:0 8px 18px rgba(225,6,0,.35);text-transform:uppercase;letter-spacing:.04em}
+  .btn.danger{color:#ff6b62;border-color:#5a2420}
+  input[type=text],select,textarea{background:#0f0f12;border:1px solid #33333b;color:var(--ink);border-radius:11px}
+  input[type=text]:focus,select:focus,textarea:focus{outline:none;border-color:#ff2a1a;box-shadow:0 0 0 3px rgba(225,6,0,.22)}
+  .prog{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px;margin:12px 0 10px}
+  .bar{height:14px;background:#26262d;border-radius:4px;transform:skewX(-14deg)}
+  .bar i{background:repeating-linear-gradient(-45deg,#ff2a1a 0 10px,#d40000 10px 20px);box-shadow:0 0 14px rgba(255,42,26,.6)}
+  #progTxt{font-family:'Russo One',sans-serif;font-weight:400;font-size:20px;min-width:64px;text-align:right}
+  .grp{display:flex;align-items:center;gap:8px;color:#c9c9d1;margin:18px 4px 8px;font-family:'Russo One',sans-serif;font-weight:400;letter-spacing:.1em}
+  .grp:before{content:"";width:16px;height:6px;background:var(--cat,#e10600);transform:skewX(-20deg)}
+  .row{background:var(--card);border:1px solid var(--line);border-left:6px solid #3a3a42;box-shadow:none;border-radius:12px;padding:10px 12px;margin-bottom:8px}
+  .row.ok{border-left-color:var(--ok)} .row.miss{border-left-color:var(--bad)} .row.out{border-left-color:var(--out)}
+  .row .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:17px;background:var(--card2);flex:0 0 auto}
+  .row.ok .ic{background:var(--ok-soft)} .row.miss .ic{background:var(--bad-soft)} .row.out .ic{background:var(--out-soft)}
+  .row .nm{color:var(--ink)}
+  .row.flash{animation:flash .9s ease}
+  @keyframes flash{0%{transform:scale(1.03);box-shadow:0 0 0 3px rgba(34,197,94,.5)}100%{transform:none}}
+  .chip{border-radius:6px;padding:3px 9px;letter-spacing:.02em}
+  .chip.mute{background:#26262d;color:var(--mute)} .chip.acc{background:var(--acc-soft);color:#ff6b62}
+  .ev{background:var(--card);border:1px solid var(--line);box-shadow:none;border-radius:var(--r)}
+  .ev .note{background:var(--card2);color:#d6d6dc}
+  .tl{border-left-color:#33333b} .tl .it:before{background:#44444d}
+  .actions{background:rgba(11,11,13,.86);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid #26262d}
+  .done{background:repeating-conic-gradient(#ffffff10 0 25%,transparent 0 50%) 0 0/18px 18px,linear-gradient(135deg,#16a34a,#0e7a37);color:#fff;border-radius:var(--r);padding:16px;text-align:center;font-family:'Russo One',sans-serif;font-size:18px;letter-spacing:.04em;box-shadow:0 10px 26px rgba(22,163,74,.35);margin:6px 0 4px}
+  .done small{display:block;font-family:'Titillium Web',sans-serif;font-weight:600;opacity:.92;font-size:13px;margin-top:3px;letter-spacing:0}
+  #login{background:radial-gradient(600px 420px at 50% 0,rgba(225,6,0,.38),transparent 70%),repeating-linear-gradient(-45deg,#121215 0 10px,#16161a 10px 20px)}
+  #login .box{background:var(--card);border:1px solid #2e2e36;border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.6);padding:30px 24px 26px;position:relative;overflow:hidden}
+  #login .box:before{content:"";position:absolute;left:0;right:0;top:0;height:8px;background:repeating-conic-gradient(#f5f5f7 0 25%,#0b0b0d 0 50%) 0 0/8px 8px}
+  #login .box .logo{margin:6px auto 12px;width:64px;height:64px;font-size:32px}
+  #login h2{font-family:'Russo One',sans-serif;font-weight:400;font-size:21px;text-transform:uppercase;letter-spacing:.03em}
+  #login .team{margin-bottom:4px}
+  #modal{background:rgba(0,0,0,.65)}
+  #modal .box{background:var(--card);border:1px solid #2e2e36;color:var(--ink);border-radius:18px}
+  #toast{background:#e10600;color:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(225,6,0,.45);font-weight:700}
+  .msg.ok{background:var(--ok-soft);color:#4ade80} .msg.info{background:var(--acc-soft);color:#ff8a80} .msg.warn{background:var(--bad-soft);color:#ff8a80}
+  .chip.ok{color:#4ade80} .chip.bad{color:#ff6b62} .chip.out{color:#c4b5fd} .chip.warn{color:#fbbf24}
+  h3{color:#c9c9d1;font-family:'Russo One',sans-serif;font-weight:400;letter-spacing:.1em}
+  label.f{color:var(--mute)}
+  .empty{color:var(--mute)}
+  code{color:#ff8a80}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1 id="boxTitle">QR leltár</h1>
+  <header class="hero">
+    <div class="brand">
+      <div class="logo">🏁</div>
+      <div>
+        <div class="team">JENDRASSIK RACING TEAM</div>
+        <h1 id="boxTitle">Gokart terem leltár</h1>
+      </div>
+    </div>
     <div class="sub" id="whoami">Betöltés…</div>
     <div id="lastStatus"></div>
   </header>
+  <div class="boxlabel">Válassz dobozt</div>
+  <div id="boxBar"></div>
   <div id="conn"></div>
 
   <nav id="tabs">
-    <button data-tab="check" class="on">Ellenőrzés</button>
-    <button data-tab="loan">Kiadás</button>
-    <button data-tab="log">Napló</button>
-    <button data-tab="labels">QR-címkék</button>
+    <button data-tab="check" class="on">✅ Ellenőrzés</button>
+    <button data-tab="loan">📤 Kiadás</button>
+    <button data-tab="log">📜 Napló</button>
+    <button data-tab="labels">🏷️ QR-címkék</button>
   </nav>
 
   <!-- ELLENŐRZÉS -->
@@ -185,6 +279,7 @@
         <option value="miss">Csak hiányos ellenőrzések</option>
         <option value="loan">Kiadás / visszavétel</option>
       </select>
+      <label class="ck" style="width:100%"><input type="checkbox" id="logAll"> minden doboz bejegyzései</label>
     </div>
     <div id="logList"></div>
   </section>
@@ -225,7 +320,9 @@
 <div id="modal"><div class="box" id="modalBody"></div></div>
 <div id="toast"></div>
 <div id="login"><div class="box">
-  <h2>QR leltár</h2>
+  <div class="logo">🏁</div>
+  <div class="team">JENDRASSIK RACING TEAM</div>
+  <h2>Gokart terem leltár</h2>
   <div class="sub">Lépj be az iskolai (@jendrassik.hu) Google-fiókoddal.</div>
   <div id="gbtn"></div>
   <div class="msg" id="loginMsg"></div>
@@ -309,18 +406,27 @@
   // ---------- állapot ----------
   const S = {
     loaded: false, me: null, boxName: 'Okos otthon doboz', items: [], loans: {}, events: [], sheetUrl: '',
-    draft: LS.get('oo-draft', {type: 'zaras', found: {}}), tab: 'check'
+    allItems: [], box: LS.get('oo-box', ''), drafts: LS.get('oo-drafts', {}), title: 'Gokart terem leltár', tab: 'check', logAll: false,
+    get items() { return this.allItems.filter(it => it.box === this.box); },
+    get draft() { const d = this.drafts[this.box]; if (d && d.found) return d; return (this.drafts[this.box] = {type: 'zaras', found: {}}); }
   };
-  if (!S.draft || typeof S.draft !== 'object' || !S.draft.found) S.draft = {type: 'zaras', found: {}};
-  const saveDraft = () => LS.set('oo-draft', S.draft);
-  const byCode = () => { const m = {}; for (const it of S.items) m[it.code] = it; return m; };
+  if (!S.drafts || typeof S.drafts !== 'object') S.drafts = {};
+  const saveDraft = () => LS.set('oo-drafts', S.drafts);
+  const boxes = () => { const out = []; for (const it of S.allItems) if (!out.includes(it.box)) out.push(it.box); return out; };
+  const boxOf = c => { const it = S.allItems.find(x => x.code === c); return it ? it.box : ''; };
+  const inBox = c => boxOf(c) === S.box;
+  function ensureBox() { const b = boxes(); if (!b.includes(S.box)) S.box = b[0] || ''; }
+  const byCode = () => { const m = {}; for (const it of S.allItems) m[it.code] = it; return m; };
   const itemName = c => { const it = byCode()[c]; return it ? it.name : c; };
+  const PALETTE = ['#6366f1', '#06b6d4', '#f59e0b', '#ec4899', '#10b981', '#8b5cf6', '#ef4444', '#0ea5e9', '#84cc16', '#f97316'];
+  const catColor = c => PALETTE[Math.max(0, cats().indexOf(c)) % PALETTE.length];
   const cats = () => { const out = []; for (const it of S.items) { const c = it.cat || 'Egyéb'; if (!out.includes(c)) out.push(c); } return out; };
 
   async function refresh() {
     try {
       const st = await api('getState');
-      Object.assign(S, {me: st.me, boxName: st.boxName, items: st.items, loans: st.loans, events: st.events, sheetUrl: st.sheetUrl, loaded: true});
+      Object.assign(S, {me: st.me, title: st.title || 'Gokart terem leltár', allItems: (st.items || []).map(it => Object.assign({}, it, {box: it.box || 'Doboz'})), loans: st.loans, events: st.events, sheetUrl: st.sheetUrl, loaded: true});
+      ensureBox();
       setConn('');
       renderAll();
     } catch (e) { setConn(errText(e)); }
@@ -445,21 +551,38 @@
 
   // ---------- fejléc ----------
   function renderHeader() {
-    $('#boxTitle').textContent = S.boxName;
-    if (S.me) $('#whoami').innerHTML = `Bejelentkezve: <b>${esc(S.me.name)}</b> (${esc(S.me.email)})` +
-      (S.sheetUrl ? ` · <a href="${esc(S.sheetUrl)}" target="_blank">táblázat megnyitása</a>` : '') + ` · <a href="#" id="logoutLink">kijelentkezés</a>`;
+    $('#boxTitle').textContent = S.title;
+    document.title = S.title + ' – Jendrassik Racing Team';
+    if (S.me) $('#whoami').innerHTML = `Bejelentkezve: <b>${esc(S.me.name)}</b>` +
+      (S.sheetUrl ? ` · <a href="${esc(S.sheetUrl)}" target="_blank">táblázat</a>` : '') + ` · <a href="#" id="logoutLink">kijelentkezés</a>`;
     const lo = document.getElementById('logoutLink'); if (lo) lo.onclick = e => { e.preventDefault(); signOut(); location.reload(); };
-    const last = S.events.find(e => e.t === 'nyitas' || e.t === 'zaras');
-    const nOut = Object.keys(S.loans).length;
+    const last = lastCheck(S.box);
+    const nOut = Object.keys(S.loans).filter(inBox).length;
     let h = '';
     if (last) {
       const miss = (last.missing || []).length;
-      h = `<span><b>Utolsó ellenőrzés:</b> ${esc(TYPES[last.t])} · ${esc(fmt(last.at))} · ${esc(last.name || '—')}</span>` +
+      h = `<span><b>${esc(S.box)}</b> · utolsó: ${esc(TYPES[last.t])} · ${esc(fmt(last.at))} · ${esc(last.name || '—')}</span>` +
           (miss ? `<span class="chip bad">⚠ ${miss} hiányzott</span>` : `<span class="chip ok">✔ minden megvolt</span>`);
-    } else if (S.loaded) h = `<span class="sub">Még nem volt ellenőrzés.</span>`;
+    } else if (S.loaded && S.box) h = `<span><b>${esc(S.box)}</b> · még nem volt ellenőrzés</span>`;
     if (nOut) h += `<span class="chip out">${nOut} eszköz kint van</span>`;
     $('#lastStatus').innerHTML = h ? `<div class="status">${h}</div>` : '';
+    renderBoxBar();
   }
+  function lastCheck(box) { return S.events.find(e => (e.t === 'nyitas' || e.t === 'zaras') && (e.box || '') === box); }
+  function renderBoxBar() {
+    const bs = boxes();
+    $('#boxBar').innerHTML = bs.length ? bs.map(b => {
+      const n = S.allItems.filter(it => it.box === b).length, L = lastCheck(b);
+      const dot = L ? ((L.missing || []).length ? 'bad' : 'ok') : '';
+      return `<button class="boxchip ${b === S.box ? 'on' : ''}" data-box="${esc(b)}"><i class="${dot}"></i><b>📦 ${esc(b)}</b><span>${n} eszköz${L ? ' · ' + esc(fmt(L.at)) : ''}</span></button>`;
+    }).join('') : `<div class="sub">${S.loaded ? 'Még nincs doboz. Töltsd ki a táblázat „Eszközök” lapját.' : 'Betöltés…'}</div>`;
+  }
+  $('#boxBar').addEventListener('click', e => {
+    const b = e.target.closest('[data-box]'); if (!b || b.dataset.box === S.box) return;
+    S.box = b.dataset.box; LS.set('oo-box', S.box);
+    showMsg('#msgCheck', ''); showMsg('#msgLoan', ''); $('#trackSel').value = '';
+    renderAll();
+  });
 
   // ---------- ellenőrzés ----------
   function checkState() {
@@ -503,16 +626,19 @@
         }
         return `<div class="row ${cls}"><div class="ic">${ic}</div><div class="tx"><div class="nm">${esc(it.name)}</div><div class="cd">${esc(it.code)}${meta ? ' · <span class="meta">' + meta + '</span>' : ''}</div></div>${right}</div>`;
       }).join('');
-      if (rows) h += `<div class="grp">${esc(c)}</div>` + rows;
+      if (rows) h += `<div class="grp" style="--cat:${catColor(c)}">${esc(c)}</div>` + rows;
     }
-    $('#checkList').innerHTML = h || `<div class="empty">✔ Minden megvan.</div>`;
+    const done = !st.missing.length ? `<div class="done">🎉 Minden megvan!<small>Nyomd meg a „Lezárás és aláírás” gombot.</small></div>` : '';
+    $('#checkList').innerHTML = done + h;
+    (S.flash || []).forEach(code => { const b = document.querySelector(`[data-undo="${CSS.escape(code)}"]`); if (b) b.closest('.row').classList.add('flash'); });
+    S.flash = [];
   }
   function onCheckCodes(codes, how) {
     const m = byCode(); let nw = 0, dup = 0; const unk = [], names = [];
     for (const raw of codes) {
       const c = norm(raw);
       if (!m[c]) { unk.push(c); continue; }
-      if (S.draft.found[c]) dup++; else { S.draft.found[c] = how; nw++; names.push(m[c].name); }
+      if (S.draft.found[c]) dup++; else { S.draft.found[c] = how; nw++; names.push(m[c].name); (S.flash = S.flash || []).push(c); }
     }
     saveDraft();
     const parts = [];
@@ -545,6 +671,7 @@
     const list = codes => `<ul>${codes.map(c => `<li>${esc(itemName(c))} <span class="cd">(${esc(c)})</span>${S.loans[c] ? ' – ' + esc(S.loans[c].name) : ''}</li>`).join('')}</ul>`;
     openModal(`
       <h2>${esc(TYPES[type])} – aláírás</h2>
+      <div class="sub" style="margin:-4px 0 8px">📦 ${esc(S.box)}</div>
       <div class="chips" style="margin-bottom:8px">
         <span class="chip ok">${st.found.length + st.manual.length} / ${total} megvan</span>
         ${st.missing.length ? `<span class="chip bad">${st.missing.length} hiányzik</span>` : ''}
@@ -567,7 +694,7 @@
         if (!b.querySelector('#fOk').checked) return showMsg('#fMsg', 'Pipáld ki a nyilatkozatot.', 'warn');
         ev.target.disabled = true; showMsg('#fMsg', 'Mentés…', 'info');
         try {
-          const r = await api('submitCheck', {type, found: st.found, manual: st.manual, note});
+          const r = await api('submitCheck', {type, box: S.box, found: st.found, manual: st.manual, note});
           S.draft.found = {}; saveDraft();
           closeModal(); showMsg('#msgCheck', '');
           toast(r.missing.length ? `Mentve – ${r.missing.length} hiány rögzítve.` : 'Mentve – minden megvolt. Köszönöm!');
@@ -587,7 +714,7 @@
     const L = Object.entries(S.loans).sort((a, b) => (b[1].at || '').localeCompare(a[1].at || ''));
     $('#loanList').innerHTML = L.length ? L.map(([c, v]) => `
       <div class="row out"><div class="ic">📤</div><div class="tx"><div class="nm">${esc(itemName(c))}</div>
-      <div class="cd">${esc(c)} · <span class="meta">${esc(v.name || '?')} · ${esc(fmt(v.at))}${v.note ? ' · ' + esc(v.note) : ''}</span></div></div>
+      <div class="cd">${esc(c)} · <span class="meta">📦 ${esc(boxOf(c))} · ${esc(v.name || '?')} · ${esc(fmt(v.at))}${v.note ? ' · ' + esc(v.note) : ''}</span></div></div>
       <button class="btn sm" data-ret="${esc(c)}">Visszahozta</button></div>`).join('') : `<div class="empty">Nincs kint eszköz.</div>`;
   }
   function onLoanCodes(codes) {
@@ -632,12 +759,13 @@
       if ((e.missing || []).length) bd += `<div style="color:var(--bad);margin-top:6px;font-weight:600">Hiányzott:</div><ul>${names(e.missing).map(x => '<li>' + x + '</li>').join('')}</ul>`;
       if ((e.manual || []).length) bd += `<div style="color:var(--warn);margin-top:6px;font-weight:600">Kézzel jelölve:</div><ul>${names(e.manual).map(x => '<li>' + x + '</li>').join('')}</ul>`;
     } else bd = names(e.codes).join(', ');
-    return `<div class="ev"><div class="hd"><span class="chip ${pill}">${esc(TYPES[e.t] || e.t)}</span><span class="who">✍ ${esc(e.name || '—')}</span><span class="when">${esc(fmt(e.at))}</span></div>
+    const bx = e.box || boxOf((e.codes || [])[0] || '');
+    return `<div class="ev"><div class="hd"><span class="chip ${pill}">${esc(TYPES[e.t] || e.t)}</span>${S.logAll && bx ? `<span class="chip mute">📦 ${esc(bx)}</span>` : ''}<span class="who">✍ ${esc(e.name || '—')}</span><span class="when">${esc(fmt(e.at))}</span></div>
       <div class="bd">${bd}</div>${e.note ? `<div class="note">${esc(e.note)}</div>` : ''}</div>`;
   }
   function renderLog() {
     const f = $('#logFilter').value;
-    const evs = S.events.filter(e =>
+    const evs = S.events.filter(e => S.logAll || ((e.t === 'nyitas' || e.t === 'zaras') ? (e.box || '') === S.box : (e.codes || []).some(inBox))).filter(e =>
       f === 'all' ? true :
       f === 'check' ? (e.t === 'nyitas' || e.t === 'zaras') :
       f === 'miss' ? ((e.t === 'nyitas' || e.t === 'zaras') && (e.missing || []).length) :
@@ -674,6 +802,7 @@
       `<div class="it ${r.cls}"><b>${esc(r.st)}</b> <span class="sub">· ${esc(TYPES[r.e.t])} · ${esc(fmt(r.e.at))} · ${esc(r.e.name || '—')}</span></div>`).join('')}</div>` : `<div class="hint">Erről az eszközről még nincs bejegyzés.</div>`);
   }
   $('#logFilter').addEventListener('change', renderLog);
+  $('#logAll').addEventListener('change', e => { S.logAll = e.target.checked; renderLog(); });
   $('#trackSel').addEventListener('change', renderTrack);
 
   // ---------- QR-címkék ----------
@@ -716,7 +845,7 @@
       wrap(g, it.code, tw, 4).forEach((l, i) => g.fillText(l, tx, y + pad + i * 3.2 * MM));
     } else {
       g.font = `${2.1 * MM}px Arial, sans-serif`; g.fillStyle = '#666';
-      let hd = S.boxName.toUpperCase(); while (hd.length > 1 && g.measureText(hd).width > tw) hd = hd.slice(0, -2) + '…';
+      let hd = String(it.box || '').toUpperCase(); while (hd.length > 1 && g.measureText(hd).width > tw) hd = hd.slice(0, -2) + '…';
       g.fillText(hd, tx, y + pad);
       g.fillStyle = '#000'; g.font = `bold ${3.3 * MM}px Arial, sans-serif`;
       let yy = y + pad + 3.2 * MM;
