@@ -198,6 +198,7 @@
           <select id="labelSize">
             <option value="normal">Normál – 47 × 28 mm (36 db / A4)</option>
             <option value="small">Kicsi – 30 × 20 mm (78 db / A4)</option>
+            <option value="mini">Mini – 15 × 15 mm (216 db / A4)</option>
           </select>
         </div>
         <div>
@@ -677,7 +678,7 @@
 
   // ---------- QR-címkék ----------
   const MM = 300 / 25.4;
-  const LABEL = {normal: {w: 47, h: 28, cols: 4, rows: 9}, small: {w: 30, h: 20, cols: 6, rows: 13}};
+  const LABEL = {normal: {w: 47, h: 28, cols: 4, rows: 9}, small: {w: 30, h: 20, cols: 6, rows: 13}, mini: {w: 15, h: 15, cols: 12, rows: 18}};
   function drawQR(g, text, x, y, size) {
     const q = qrcode(0, 'M'); q.addData(text); q.make();
     const n = q.getModuleCount(), cell = size / (n + 2);
@@ -696,6 +697,16 @@
     const cf = LABEL[size], w = cf.w * MM, h = cf.h * MM;
     g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
     g.strokeStyle = '#c4c8cf'; g.lineWidth = 2; g.setLineDash([14, 10]); g.strokeRect(x + 1, y + 1, w - 2, h - 2); g.setLineDash([]);
+    if (size === 'mini') {
+      const p = 0.7 * MM, txtH = 2.4 * MM, q = h - 2 * p - txtH;
+      drawQR(g, it.code, x + (w - q) / 2, y + p, q);
+      g.fillStyle = '#000'; g.textBaseline = 'top'; g.textAlign = 'center';
+      let fs = 2.0 * MM; g.font = `bold ${fs}px Arial, sans-serif`;
+      while (fs > 1.2 * MM && g.measureText(it.code).width > w - 2 * p) { fs -= 0.1 * MM; g.font = `bold ${fs}px Arial, sans-serif`; }
+      g.fillText(it.code, x + w / 2, y + p + q + 0.25 * MM);
+      g.restore();
+      return;
+    }
     const pad = (size === 'small' ? 1.5 : 2) * MM, qs = h - 2 * pad;
     drawQR(g, it.code, x + pad, y + pad, qs);
     const tx = x + pad + qs + 1.2 * MM, tw = x + w - pad - tx;
@@ -754,7 +765,7 @@
         pdf.addImage(drawPage(items, size).toDataURL('image/png'), 'PNG', 0, 0, 210, 297, undefined, 'FAST');
       });
       const d = new Date(), stamp = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-      pdf.save(`QR-cimkek-${size === 'small' ? 'kicsi' : 'normal'}-${stamp}.pdf`);
+      pdf.save(`QR-cimkek-${size}-${stamp}.pdf`);
       showMsg('#msgLabels', 'Kész, a PDF letöltődött.', 'ok');
     } catch (err) { showMsg('#msgLabels', 'Nem sikerült: ' + errText(err), 'warn'); }
     e.target.disabled = false;
