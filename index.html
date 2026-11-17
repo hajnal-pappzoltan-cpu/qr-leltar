@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Okos otthon doboz – QR leltár</title>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#fff; --ink:#1c2330; --mute:#667085; --line:#e3e6eb;
+    --acc:#1f5fbf; --acc-soft:#e8f0fc;
+    --ok:#1d8a4e; --ok-soft:#e5f5ec; --bad:#c62f2f; --bad-soft:#fdeaea;
+    --warn:#b8730a; --warn-soft:#fdf3e1; --out:#6b4fbb; --out-soft:#efeafb; --r:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:12px 12px 90px}
+  header{padding:6px 2px 10px}
+  h1{font-size:20px;margin:0 0 2px}
+  h3{font-size:14px;margin:18px 0 8px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+  .sub{color:var(--mute);font-size:13px}
+  #conn{display:none;background:var(--bad-soft);color:var(--bad);border-radius:var(--r);padding:8px 12px;margin-bottom:10px;font-size:14px}
+  .status{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font-size:14px;margin-top:8px}
+  nav{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;position:sticky;top:0;background:var(--bg);z-index:5}
+  nav button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:999px;font:inherit;font-weight:600;cursor:pointer}
+  nav button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  section{display:none} section.on{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:10px}
+  .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:4px;gap:4px;margin-bottom:10px}
+  .seg button{flex:1;border:0;background:transparent;padding:10px;border-radius:9px;font:inherit;font-weight:700;color:var(--mute);cursor:pointer}
+  .seg button.on{background:var(--acc-soft);color:var(--acc)}
+  .scanbar{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+  .btn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+  .btn.big{width:100%;padding:14px;font-size:16px}
+  .btn.danger{color:var(--bad);border-color:#f0c4c4}
+  .btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
+  .btn:disabled{opacity:.5;cursor:default}
+  .grow{flex:1 1 150px}
+  input[type=text],select,textarea{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+  textarea{min-height:70px;resize:vertical}
+  .codein{display:flex;gap:6px;flex:1 1 260px} .codein input{flex:1}
+  .hide-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+  .msg{margin-top:8px;font-size:14px;border-radius:8px}
+  .msg.info,.msg.ok,.msg.warn{padding:8px 10px}
+  .msg.info{background:var(--acc-soft);color:var(--acc)} .msg.ok{background:var(--ok-soft);color:var(--ok)} .msg.warn{background:var(--bad-soft);color:var(--bad)}
+  .prog{display:flex;align-items:center;gap:10px;margin:12px 0 6px}
+  .bar{flex:1;height:10px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .25s}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
+  .chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.bad{background:var(--bad-soft);color:var(--bad)}
+  .chip.out{background:var(--out-soft);color:var(--out)} .chip.warn{background:var(--warn-soft);color:var(--warn)}
+  .chip.mute{background:#eef0f3;color:var(--mute)} .chip.acc{background:var(--acc-soft);color:var(--acc)}
+  .grp{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;margin:14px 2px 6px}
+  .row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:10px;padding:9px 10px;margin-bottom:6px}
+  .row.ok{border-left-color:var(--ok)} .row.miss{border-left-color:var(--bad)} .row.out{border-left-color:var(--out)}
+  .row .ic{width:22px;text-align:center;font-size:17px}
+  .row .tx{flex:1;min-width:0}
+  .row .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis}
+  .cd{font:12.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--mute)}
+  .meta{font:12.5px system-ui,sans-serif;color:var(--mute)}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .ck{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--mute)}
+  .actions{position:fixed;left:0;right:0;bottom:0;background:rgba(244,245,247,.96);border-top:1px solid var(--line);padding:10px 12px;z-index:6}
+  .actions .in{max-width:760px;margin:0 auto;display:flex;gap:8px} .actions .in .primary{flex:1}
+  .ev{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-bottom:8px}
+  .ev .hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .ev .who{font-weight:700} .ev .when{color:var(--mute);font-size:13px;margin-left:auto}
+  .ev .bd{margin-top:6px;font-size:14px}
+  .ev .note{margin-top:6px;padding:6px 8px;background:#f6f7f9;border-radius:8px;font-size:13.5px;white-space:pre-wrap}
+  .ev ul{margin:4px 0 0;padding-left:18px}
+  .tl{border-left:3px solid var(--line);margin-left:8px;padding-left:12px}
+  .tl .it{position:relative;padding:6px 0}
+  .tl .it:before{content:"";position:absolute;left:-19px;top:12px;width:11px;height:11px;border-radius:50%;background:var(--line)}
+  .tl .it.ok:before{background:var(--ok)} .tl .it.bad:before{background:var(--bad)} .tl .it.out:before{background:var(--out)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  label.f{display:block;font-size:13px;font-weight:600;color:var(--mute);margin:10px 0 4px}
+  #labelPreview{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;margin-top:10px}
+  .empty{text-align:center;color:var(--mute);padding:30px 10px}
+  #modal{position:fixed;inset:0;background:rgba(20,25,35,.45);display:none;align-items:flex-end;justify-content:center;z-index:20;padding:10px}
+  #modal.on{display:flex}
+  #modal .box{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:92vh;overflow:auto;padding:16px}
+  #modal h2{margin:0 0 8px;font-size:18px}
+  #modal .btns{display:flex;gap:8px;margin-top:14px} #modal .btns .btn{flex:1}
+  @media (min-width:640px){#modal{align-items:center}}
+  #camVideo{width:100%;border-radius:10px;background:#000;max-height:60vh;object-fit:cover}
+  #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#1c2330;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30;max-width:90vw}
+  #toast.on{opacity:1}
+  .hint{font-size:13px;color:var(--mute);margin-top:8px}
+  a{color:var(--acc)}
+  #login{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;align-items:center;justify-content:center;padding:20px}
+  #login.on{display:flex}
+  #login .box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;max-width:380px;width:100%;text-align:center}
+  #login h2{margin:0 0 6px;font-size:20px}
+  #gbtn{display:flex;justify-content:center;margin:18px 0 8px;min-height:44px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="boxTitle">QR leltár</h1>
+    <div class="sub" id="whoami">Betöltés…</div>
+    <div id="lastStatus"></div>
+  </header>
+  <div id="conn"></div>
+
+  <nav id="tabs">
+    <button data-tab="check" class="on">Ellenőrzés</button>
+    <button data-tab="loan">Kiadás</button>
+    <button data-tab="log">Napló</button>
+    <button data-tab="labels">QR-címkék</button>
+  </nav>
+
+  <!-- ELLENŐRZÉS -->
+  <section id="tab-check" class="on">
+    <div class="seg" id="typeSeg">
+      <button data-type="nyitas">Nyitás (kivétel előtt)</button>
+      <button data-type="zaras">Zárás (szekrénybe tétel előtt)</button>
+    </div>
+    <div class="card">
+      <div class="scanbar">
+        <button class="btn primary grow" id="liveCheck">🎥 Élő kamera</button>
+        <label class="btn grow" for="camCheck">📷 Fotó</label>
+        <input class="hide-file" type="file" id="camCheck" accept="image/*" capture="environment">
+      </div>
+      <div class="codein" style="margin-top:8px">
+        <input type="text" id="codeCheck" placeholder="Kód beírása / vonalkódolvasó" autocomplete="off" autocapitalize="characters">
+        <button class="btn" id="codeCheckBtn">OK</button>
+      </div>
+      <div class="hint">Fotónál egy képen több kód is lehet: tedd ki az eszközöket egymás mellé, címkével felfelé.</div>
+      <div class="msg" id="msgCheck"></div>
+    </div>
+    <div class="prog"><div class="bar"><i id="progBar"></i></div><b id="progTxt">0 / 0</b></div>
+    <div class="toolbar">
+      <div class="chips" id="progChips"></div>
+      <label class="ck"><input type="checkbox" id="onlyMissing"> csak ami még nincs meg</label>
+    </div>
+    <div id="checkList"></div>
+  </section>
+
+  <!-- KIADÁS -->
+  <section id="tab-loan">
+    <div class="card">
+      <b>Eszköz kiadása</b>
+      <div class="sub" style="margin-bottom:8px">Ha valaki elvisz egy eszközt (haza, másik projekthez), itt rögzítsd. Így nem „eltűnt”, hanem tudjuk, kinél van.</div>
+      <div class="scanbar">
+        <button class="btn grow" id="liveLoan">🎥 Élő kamera</button>
+        <label class="btn grow" for="camLoan">📷 Fotó</label>
+        <input class="hide-file" type="file" id="camLoan" accept="image/*" capture="environment">
+      </div>
+      <div class="codein" style="margin-top:8px">
+        <input type="text" id="codeLoan" placeholder="Kód beírása" autocomplete="off" autocapitalize="characters">
+        <button class="btn" id="codeLoanBtn">OK</button>
+      </div>
+      <div class="msg" id="msgLoan"></div>
+      <label class="f" for="loanSel">Eszköz</label>
+      <select id="loanSel"></select>
+      <label class="f" for="loanHolder">Kinél lesz? (üresen hagyva: nálad)</label>
+      <input type="text" id="loanHolder" placeholder="pl. Kiss Bence 11.B">
+      <label class="f" for="loanNote">Mire / meddig? (nem kötelező)</label>
+      <input type="text" id="loanNote" placeholder="pl. Jarvis projekt, péntekig">
+      <div style="margin-top:12px"><button class="btn primary big" id="doLoan">Kiadás rögzítése</button></div>
+    </div>
+    <h3>Jelenleg kint</h3>
+    <div id="loanList"></div>
+  </section>
+
+  <!-- NAPLÓ -->
+  <section id="tab-log">
+    <div class="card">
+      <b>Eszköz nyomkövetése</b>
+      <div class="sub" style="margin-bottom:8px">Válassz egy eszközt: látszik, melyik ellenőrzésnél volt meg utoljára, és mikor hiányzott először.</div>
+      <select id="trackSel"></select>
+      <div id="trackOut"></div>
+    </div>
+    <div class="toolbar" style="margin:14px 0 8px">
+      <b>Bejegyzések</b>
+      <select id="logFilter" style="width:auto">
+        <option value="all">Minden</option>
+        <option value="check">Csak ellenőrzések</option>
+        <option value="miss">Csak hiányos ellenőrzések</option>
+        <option value="loan">Kiadás / visszavétel</option>
+      </select>
+    </div>
+    <div id="logList"></div>
+  </section>
+
+  <!-- CÍMKÉK -->
+  <section id="tab-labels">
+    <div class="card">
+      <div class="grid2">
+        <div>
+          <label class="f" for="labelSize" style="margin-top:0">Címkeméret</label>
+          <select id="labelSize">
+            <option value="normal">Normál – 47 × 28 mm (36 db / A4)</option>
+            <option value="small">Kicsi – 30 × 20 mm (78 db / A4)</option>
+          </select>
+        </div>
+        <div>
+          <label class="f" for="labelCat" style="margin-top:0">Melyik eszközök</label>
+          <select id="labelCat"></select>
+        </div>
+      </div>
+      <div style="margin-top:12px"><button class="btn primary big" id="dlLabels">Címke-PDF letöltése</button></div>
+      <div class="hint">Nyomtatáskor válaszd a „Tényleges méret” / 100% beállítást. A csupasz panelekre nehéz ragasztani: a címke mehet a tasakra vagy dobozkára, amiben az eszköz lakik.</div>
+      <div class="msg" id="msgLabels"></div>
+      <canvas id="labelPreview"></canvas>
+      <div class="sub" id="labelPages"></div>
+    </div>
+  </section>
+</div>
+
+<div class="actions" id="checkActions">
+  <div class="in">
+    <button class="btn" id="resetDraft">Újrakezdés</button>
+    <button class="btn primary" id="finishCheck">Lezárás és aláírás</button>
+  </div>
+</div>
+
+<div id="modal"><div class="box" id="modalBody"></div></div>
+<div id="toast"></div>
+<div id="login"><div class="box">
+  <h2>QR leltár</h2>
+  <div class="sub">Lépj be az iskolai (@jendrassik.hu) Google-fiókoddal.</div>
+  <div id="gbtn"></div>
+  <div class="msg" id="loginMsg"></div>
+</div></div>
+
+<script>
+(() => {
+  // ---------- segédek ----------
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const norm = s => String(s || '').trim().toUpperCase().replace(/\s+/g, '-');
+  const LS = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  const fmt = iso => { try { return new Date(iso).toLocaleString('hu-HU', {year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}); } catch (e) { return iso; } };
+  const TYPES = {nyitas:'Nyitás', zaras:'Zárás', ki:'Kiadás', vissza:'Visszavétel'};
+  const vib = () => { try { navigator.vibrate && navigator.vibrate(40); } catch (e) {} };
+  // ---------- beállítások ----------
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwj7ZWnvuU_To7Jn5ZOUrBn-x592U9lRg0U_cd4l5NionWTi8MCKwI4pVG9PymZpr49/exec';
+  const CLIENT_ID = '901542203818-v7qj4983vs8chsvtsdp0bmj3iss92lig.apps.googleusercontent.com';
+  const DOMAIN = 'jendrassik.hu';
+
+  // ---------- bejelentkezés (Google) ----------
+  let token = null, tokenExp = 0, waiters = [];
+  try { const t = JSON.parse(localStorage.getItem('oo-token') || 'null'); if (t && t.exp * 1000 > Date.now() + 60000) { token = t.token; tokenExp = t.exp; } } catch (e) {}
+  function jwtPayload(t) { try { return JSON.parse(decodeURIComponent(escape(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))))); } catch (e) { return {}; } }
+  function onCredential(resp) {
+    const p = jwtPayload(resp.credential);
+    if (p.hd !== DOMAIN) { showMsg('#loginMsg', 'Csak @' + DOMAIN + ' fiókkal lehet belépni.', 'warn'); return; }
+    token = resp.credential; tokenExp = p.exp || 0;
+    try { localStorage.setItem('oo-token', JSON.stringify({token, exp: tokenExp})); } catch (e) {}
+    document.getElementById('login').classList.remove('on'); showMsg('#loginMsg', '');
+    const w = waiters; waiters = []; w.forEach(f => f());
+  }
+  function signOut() {
+    token = null; tokenExp = 0;
+    try { localStorage.removeItem('oo-token'); } catch (e) {}
+    try { google.accounts.id.disableAutoSelect(); } catch (e) {}
+  }
+  let gisReady = false;
+  function initGis() {
+    if (gisReady) return true;
+    if (!window.google || !google.accounts || !google.accounts.id) return false;
+    google.accounts.id.initialize({client_id: CLIENT_ID, callback: onCredential, hd: DOMAIN, auto_select: true, cancel_on_tap_outside: false});
+    google.accounts.id.renderButton(document.getElementById('gbtn'), {theme: 'filled_blue', size: 'large', text: 'signin_with', shape: 'pill', locale: 'hu'});
+    gisReady = true;
+    return true;
+  }
+  function showLogin(msg) {
+    document.getElementById('login').classList.add('on');
+    if (msg) showMsg('#loginMsg', msg, 'warn');
+    const tryInit = () => { if (initGis()) { try { google.accounts.id.prompt(); } catch (e) {} } else setTimeout(tryInit, 200); };
+    tryInit();
+  }
+  function ensureToken() {
+    if (token && tokenExp * 1000 > Date.now() + 60000) return Promise.resolve();
+    return new Promise(res => { waiters.push(res); showLogin(token ? 'A bejelentkezés lejárt, lépj be újra.' : ''); });
+  }
+  async function api(fn, ...args) {
+    await ensureToken();
+    let r;
+    try {
+      r = await fetch(API_URL, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({action: fn, args, token}), redirect: 'follow'});
+    } catch (e) { throw new Error('Nincs kapcsolat a szerverrel. Ellenőrizd az internetet.'); }
+    let j;
+    try { j = await r.json(); } catch (e) { throw new Error('Hibás válasz a szervertől (' + r.status + ').'); }
+    if (!j.ok) {
+      if (j.auth) { signOut(); showLogin(j.error); }
+      throw new Error(j.error || 'Ismeretlen hiba');
+    }
+    return j.data;
+  }
+  const errText = e => (e && e.message ? e.message : String(e || 'Ismeretlen hiba')).replace(/^Error:\s*/, '');
+
+  let toastT;
+  function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('on'), 2800); }
+  function showMsg(id, text, kind) { const el = $(id); el.className = 'msg ' + (text ? kind || 'info' : ''); el.textContent = text || ''; }
+  function setConn(t) { const el = $('#conn'); el.textContent = t || ''; el.style.display = t ? 'block' : 'none'; }
+
+  // ---------- állapot ----------
+  const S = {
+    loaded: false, me: null, boxName: 'Okos otthon doboz', items: [], loans: {}, events: [], sheetUrl: '',
+    draft: LS.get('oo-draft', {type: 'zaras', found: {}}), tab: 'check'
+  };
+  if (!S.draft || typeof S.draft !== 'object' || !S.draft.found) S.draft = {type: 'zaras', found: {}};
+  const saveDraft = () => LS.set('oo-draft', S.draft);
+  const byCode = () => { const m = {}; for (const it of S.items) m[it.code] = it; return m; };
+  const itemName = c => { const it = byCode()[c]; return it ? it.name : c; };
+  const cats = () => { const out = []; for (const it of S.items) { const c = it.cat || 'Egyéb'; if (!out.includes(c)) out.push(c); } return out; };
+
+  async function refresh() {
+    try {
+      const st = await api('getState');
+      Object.assign(S, {me: st.me, boxName: st.boxName, items: st.items, loans: st.loans, events: st.events, sheetUrl: st.sheetUrl, loaded: true});
+      setConn('');
+      renderAll();
+    } catch (e) { setConn(errText(e)); }
+  }
+
+  // ---------- QR dekódolás ----------
+  async function loadImage(file) {
+    try { return await createImageBitmap(file, {imageOrientation: 'from-image'}); }
+    catch (e) { return await new Promise((res, rej) => { const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = URL.createObjectURL(file); }); }
+  }
+  async function hasDetector() {
+    if (!('BarcodeDetector' in window)) return false;
+    try { return (await BarcodeDetector.getSupportedFormats()).includes('qr_code'); } catch (e) { return false; }
+  }
+  async function decodePhoto(file) {
+    const img = await loadImage(file);
+    const found = new Set();
+    if (await hasDetector()) {
+      try { (await new BarcodeDetector({formats: ['qr_code']}).detect(img)).forEach(r => r.rawValue && found.add(r.rawValue)); } catch (e) {}
+    }
+    if (!found.size && window.jsQR) {
+      const sc = Math.min(1, 2000 / Math.max(img.width, img.height));
+      const W = Math.round(img.width * sc), H = Math.round(img.height * sc);
+      const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+      const g = cv.getContext('2d', {willReadFrequently: true}); g.drawImage(img, 0, 0, W, H);
+      const tryRect = (x, y, w, h) => {
+        x = Math.max(0, Math.round(x)); y = Math.max(0, Math.round(y));
+        w = Math.min(W - x, Math.round(w)); h = Math.min(H - y, Math.round(h));
+        if (w < 40 || h < 40) return;
+        const r = jsQR(g.getImageData(x, y, w, h).data, w, h, {inversionAttempts: 'dontInvert'});
+        if (r && r.data) found.add(r.data);
+      };
+      tryRect(0, 0, W, H);
+      for (const n of [2, 3, 4]) {
+        const tw = W / n, th = H / n, ox = tw * 0.3, oy = th * 0.3;
+        for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) tryRect(i * tw - ox, j * th - oy, tw + 2 * ox, th + 2 * oy);
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+    try { img.close && img.close(); } catch (e) {}
+    return [...found];
+  }
+
+  // élő kamera
+  let camStream = null, camTimer = null;
+  function stopCam() {
+    clearTimeout(camTimer); camTimer = null;
+    if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  }
+  async function openLive(onCodes, msgSel, continuous) {
+    openModal(`<h2>Élő kamera</h2><video id="camVideo" playsinline muted></video>
+      <div class="msg" id="camMsg"></div>
+      <div class="btns"><button class="btn primary" data-x>Kész</button></div>`, b => {
+      b.querySelector('[data-x]').onclick = () => { stopCam(); closeModal(); };
+    });
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}, audio: false});
+    } catch (e) {
+      stopCam(); closeModal();
+      showMsg(msgSel, 'Az élő kamera itt nem érhető el (nincs engedély vagy a böngésző tiltja). Használd a 📷 Fotó gombot.', 'warn');
+      return;
+    }
+    const v = $('#camVideo'); v.srcObject = camStream; try { await v.play(); } catch (e) {}
+    const det = (await hasDetector()) ? new BarcodeDetector({formats: ['qr_code']}) : null;
+    const cv = document.createElement('canvas'), g = cv.getContext('2d', {willReadFrequently: true});
+    const recent = {};
+    const tick = async () => {
+      if (!camStream) return;
+      let codes = [];
+      try {
+        if (v.videoWidth) {
+          if (det) codes = (await det.detect(v)).map(r => r.rawValue).filter(Boolean);
+          else if (window.jsQR) {
+            const sc = Math.min(1, 800 / v.videoWidth);
+            cv.width = Math.round(v.videoWidth * sc); cv.height = Math.round(v.videoHeight * sc);
+            g.drawImage(v, 0, 0, cv.width, cv.height);
+            const r = jsQR(g.getImageData(0, 0, cv.width, cv.height).data, cv.width, cv.height, {inversionAttempts: 'dontInvert'});
+            if (r && r.data) codes = [r.data];
+          }
+        }
+      } catch (e) {}
+      const now = Date.now();
+      const fresh = codes.filter(c => !recent[c] || now - recent[c] > 4000);
+      fresh.forEach(c => recent[c] = now);
+      if (fresh.length) {
+        const txt = onCodes(fresh, 'scan');
+        const m = $('#camMsg'); if (m) { m.className = 'msg ok'; m.textContent = txt || fresh.join(', '); }
+        if (!continuous) { stopCam(); closeModal(); return; }
+      }
+      camTimer = setTimeout(tick, 250);
+    };
+    tick();
+  }
+
+  function bindScanner(fileSel, inSel, btnSel, liveSel, msgSel, onCodes, continuous) {
+    $(fileSel).addEventListener('change', async e => {
+      const f = e.target.files && e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      showMsg(msgSel, 'Kép feldolgozása…', 'info');
+      try {
+        const codes = await decodePhoto(f);
+        if (!codes.length) { showMsg(msgSel, 'Nem találtam QR-kódot a képen. Próbáld közelebbről, jó fényben, élesen.', 'warn'); return; }
+        onCodes(codes, 'scan');
+      } catch (err) { showMsg(msgSel, 'Nem sikerült beolvasni a képet.', 'warn'); }
+    });
+    const go = () => { const v = $(inSel).value; $(inSel).value = ''; if (v.trim()) onCodes([v], 'kod'); $(inSel).focus(); };
+    $(btnSel).addEventListener('click', go);
+    $(inSel).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+    $(liveSel).addEventListener('click', () => openLive(onCodes, msgSel, continuous));
+  }
+
+  // ---------- modal ----------
+  function openModal(html, onBind) { $('#modalBody').innerHTML = html; $('#modal').classList.add('on'); onBind && onBind($('#modalBody')); }
+  function closeModal() { $('#modal').classList.remove('on'); $('#modalBody').innerHTML = ''; }
+  $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') { stopCam(); closeModal(); } });
+  function confirmBox(title, text, okLabel, onOk, danger) {
+    openModal(`<h2>${esc(title)}</h2><div>${text}</div><div class="btns"><button class="btn" data-x>Mégse</button><button class="btn ${danger ? 'danger' : 'primary'}" data-ok>${esc(okLabel)}</button></div>`, b => {
+      b.querySelector('[data-x]').onclick = closeModal;
+      b.querySelector('[data-ok]').onclick = async () => { closeModal(); await onOk(); };
+    });
+  }
+
+  // ---------- fejléc ----------
+  function renderHeader() {
+    $('#boxTitle').textContent = S.boxName;
+    if (S.me) $('#whoami').innerHTML = `Bejelentkezve: <b>${esc(S.me.name)}</b> (${esc(S.me.email)})` +
+      (S.sheetUrl ? ` · <a href="${esc(S.sheetUrl)}" target="_blank">táblázat megnyitása</a>` : '') + ` · <a href="#" id="logoutLink">kijelentkezés</a>`;
+    const lo = document.getElementById('logoutLink'); if (lo) lo.onclick = e => { e.preventDefault(); signOut(); location.reload(); };
+    const last = S.events.find(e => e.t === 'nyitas' || e.t === 'zaras');
+    const nOut = Object.keys(S.loans).length;
+    let h = '';
+    if (last) {
+      const miss = (last.missing || []).length;
+      h = `<span><b>Utolsó ellenőrzés:</b> ${esc(TYPES[last.t])} · ${esc(fmt(last.at))} · ${esc(last.name || '—')}</span>` +
+          (miss ? `<span class="chip bad">⚠ ${miss} hiányzott</span>` : `<span class="chip ok">✔ minden megvolt</span>`);
+    } else if (S.loaded) h = `<span class="sub">Még nem volt ellenőrzés.</span>`;
+    if (nOut) h += `<span class="chip out">${nOut} eszköz kint van</span>`;
+    $('#lastStatus').innerHTML = h ? `<div class="status">${h}</div>` : '';
+  }
+
+  // ---------- ellenőrzés ----------
+  function checkState() {
+    const f = S.draft.found, res = {found: [], manual: [], missing: [], out: [], back: []};
+    for (const it of S.items) {
+      const st = f[it.code], L = S.loans[it.code];
+      if (st) { (st === 'kezi' ? res.manual : res.found).push(it.code); if (L) res.back.push(it.code); }
+      else if (L) res.out.push(it.code);
+      else res.missing.push(it.code);
+    }
+    return res;
+  }
+  function renderCheck() {
+    document.querySelectorAll('#typeSeg button').forEach(b => b.classList.toggle('on', b.dataset.type === S.draft.type));
+    const total = S.items.length, st = checkState(), got = st.found.length + st.manual.length;
+    $('#progTxt').textContent = `${got} / ${total}`;
+    $('#progBar').style.width = total ? (got / total * 100) + '%' : '0';
+    $('#progChips').innerHTML =
+      (st.missing.length ? `<span class="chip bad">${st.missing.length} még nincs meg</span>` : (total ? `<span class="chip ok">minden megvan</span>` : '')) +
+      (st.out.length ? `<span class="chip out">${st.out.length} kiadva</span>` : '') +
+      (st.manual.length ? `<span class="chip warn">${st.manual.length} kézzel jelölve</span>` : '');
+    if (!total) { $('#checkList').innerHTML = `<div class="empty">${S.loaded ? 'Az eszközlista üres. Töltsd ki a táblázat „Eszközök” lapját.' : 'Betöltés…'}</div>`; return; }
+    const only = $('#onlyMissing').checked;
+    let h = '';
+    for (const c of cats()) {
+      const rows = S.items.filter(it => (it.cat || 'Egyéb') === c).map(it => {
+        const s = S.draft.found[it.code], L = S.loans[it.code];
+        if (only && s) return '';
+        let cls, ic, right, meta = '';
+        if (s) {
+          cls = 'ok'; ic = s === 'kezi' ? '✋' : '✅';
+          meta = s === 'kezi' ? 'kézzel jelölve' : (s === 'kod' ? 'kód beírva' : 'beolvasva');
+          if (L) meta += ' · kiadottként volt nyilvántartva';
+          right = `<button class="btn sm" data-undo="${esc(it.code)}">Vissza</button>`;
+        } else if (L) {
+          cls = 'out'; ic = '📤'; meta = `kint: ${esc(L.name || '?')} · ${esc(fmt(L.at))}`;
+          right = `<button class="btn sm" data-man="${esc(it.code)}">Mégis itt van</button>`;
+        } else {
+          cls = 'miss'; ic = '⬜';
+          right = `<button class="btn sm" data-man="${esc(it.code)}">Kézzel</button>`;
+        }
+        return `<div class="row ${cls}"><div class="ic">${ic}</div><div class="tx"><div class="nm">${esc(it.name)}</div><div class="cd">${esc(it.code)}${meta ? ' · <span class="meta">' + meta + '</span>' : ''}</div></div>${right}</div>`;
+      }).join('');
+      if (rows) h += `<div class="grp">${esc(c)}</div>` + rows;
+    }
+    $('#checkList').innerHTML = h || `<div class="empty">✔ Minden megvan.</div>`;
+  }
+  function onCheckCodes(codes, how) {
+    const m = byCode(); let nw = 0, dup = 0; const unk = [], names = [];
+    for (const raw of codes) {
+      const c = norm(raw);
+      if (!m[c]) { unk.push(c); continue; }
+      if (S.draft.found[c]) dup++; else { S.draft.found[c] = how; nw++; names.push(m[c].name); }
+    }
+    saveDraft();
+    const parts = [];
+    if (nw) parts.push(nw === 1 ? '✔ ' + names[0] : `✔ ${nw} új eszköz`);
+    if (dup) parts.push(`${dup} már be volt olvasva`);
+    if (unk.length) parts.push(`ismeretlen kód: ${unk.join(', ')}`);
+    const txt = parts.join(' · ');
+    showMsg('#msgCheck', txt, nw ? 'ok' : 'warn');
+    if (nw) vib();
+    renderCheck();
+    const st = checkState();
+    return txt + ` (${st.found.length + st.manual.length} / ${S.items.length})`;
+  }
+  $('#checkList').addEventListener('click', e => {
+    const u = e.target.closest('[data-undo]'), mn = e.target.closest('[data-man]');
+    if (u) { delete S.draft.found[u.dataset.undo]; saveDraft(); renderCheck(); }
+    if (mn) {
+      const c = mn.dataset.man;
+      confirmBox('Kézi jelölés', `<p><b>${esc(itemName(c))}</b> (${esc(c)})</p><p>Akkor jelöld kézzel, ha az eszköz a kezedben van, de a címkéje nem olvasható. A naplóban „kézzel jelölt”-ként jelenik meg.</p>`, 'Itt van, jelölöm', () => { S.draft.found[c] = 'kezi'; saveDraft(); renderCheck(); });
+    }
+  });
+  $('#typeSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.draft.type = b.dataset.type; saveDraft(); renderCheck(); });
+  $('#onlyMissing').addEventListener('change', renderCheck);
+  $('#resetDraft').addEventListener('click', () => confirmBox('Újrakezdés', 'Törlöd az eddigi beolvasásokat ebből az ellenőrzésből?', 'Újrakezdem', () => { S.draft.found = {}; saveDraft(); showMsg('#msgCheck', ''); renderCheck(); }, true));
+  $('#finishCheck').addEventListener('click', openFinish);
+
+  function openFinish() {
+    if (!S.items.length) { toast('Nincs eszközlista.'); return; }
+    const st = checkState(), type = S.draft.type, total = S.items.length;
+    const list = codes => `<ul>${codes.map(c => `<li>${esc(itemName(c))} <span class="cd">(${esc(c)})</span>${S.loans[c] ? ' – ' + esc(S.loans[c].name) : ''}</li>`).join('')}</ul>`;
+    openModal(`
+      <h2>${esc(TYPES[type])} – aláírás</h2>
+      <div class="chips" style="margin-bottom:8px">
+        <span class="chip ok">${st.found.length + st.manual.length} / ${total} megvan</span>
+        ${st.missing.length ? `<span class="chip bad">${st.missing.length} hiányzik</span>` : ''}
+        ${st.out.length ? `<span class="chip out">${st.out.length} kiadva</span>` : ''}
+        ${st.manual.length ? `<span class="chip warn">${st.manual.length} kézzel jelölve</span>` : ''}
+      </div>
+      ${st.missing.length ? `<div style="color:var(--bad);font-weight:700;margin-top:10px">Hiányzik (nincs kiadva sem):</div>${list(st.missing)}` : ''}
+      ${st.out.length ? `<div style="color:var(--out);font-weight:700;margin-top:10px">Kiadva, nincs a dobozban:</div>${list(st.out)}` : ''}
+      ${st.back.length ? `<div class="msg info" style="margin-top:10px">${st.back.length} eszköz kiadottként szerepelt, de a dobozban volt – mentéskor automatikusan visszavételezem.</div>` : ''}
+      <div style="margin-top:12px">Aláíró: <b>${esc(S.me ? S.me.name : '')}</b> <span class="sub">(${esc(S.me ? S.me.email : '')})</span></div>
+      <label class="f" for="fNote">Megjegyzés ${st.missing.length ? '<span style="color:var(--bad)">(hiány esetén kötelező)</span>' : '(nem kötelező)'}</label>
+      <textarea id="fNote" placeholder="${st.missing.length ? 'Mit tudsz a hiányzó eszközökről? Ki használta utoljára, hol lehet?' : 'pl. sérült eszköz, rendetlenség'}"></textarea>
+      <label class="ck" style="margin-top:12px;color:var(--ink)"><input type="checkbox" id="fOk"> Személyesen ellenőriztem, a fenti állapot a valóságnak megfelel.</label>
+      <div class="msg" id="fMsg"></div>
+      <div class="btns"><button class="btn" data-x>Mégse</button><button class="btn primary" data-ok>Aláírom és mentem</button></div>`, b => {
+      b.querySelector('[data-x]').onclick = closeModal;
+      b.querySelector('[data-ok]').onclick = async ev => {
+        const note = b.querySelector('#fNote').value.trim();
+        if (st.missing.length && !note) return showMsg('#fMsg', 'Hiány esetén írj megjegyzést.', 'warn');
+        if (!b.querySelector('#fOk').checked) return showMsg('#fMsg', 'Pipáld ki a nyilatkozatot.', 'warn');
+        ev.target.disabled = true; showMsg('#fMsg', 'Mentés…', 'info');
+        try {
+          const r = await api('submitCheck', {type, found: st.found, manual: st.manual, note});
+          S.draft.found = {}; saveDraft();
+          closeModal(); showMsg('#msgCheck', '');
+          toast(r.missing.length ? `Mentve – ${r.missing.length} hiány rögzítve.` : 'Mentve – minden megvolt. Köszönöm!');
+          await refresh();
+        } catch (e) { ev.target.disabled = false; showMsg('#fMsg', errText(e), 'warn'); }
+      };
+    });
+  }
+
+  // ---------- kiadás ----------
+  function renderLoan() {
+    const sel = $('#loanSel'), cur = sel.value;
+    sel.innerHTML = '<option value="">– válassz –</option>' + cats().map(c =>
+      `<optgroup label="${esc(c)}">` + S.items.filter(it => (it.cat || 'Egyéb') === c).map(it =>
+        `<option value="${esc(it.code)}" ${S.loans[it.code] ? 'disabled' : ''}>${esc(it.name)} (${esc(it.code)})${S.loans[it.code] ? ' – kint' : ''}</option>`).join('') + '</optgroup>').join('');
+    sel.value = cur && !S.loans[cur] ? cur : '';
+    const L = Object.entries(S.loans).sort((a, b) => (b[1].at || '').localeCompare(a[1].at || ''));
+    $('#loanList').innerHTML = L.length ? L.map(([c, v]) => `
+      <div class="row out"><div class="ic">📤</div><div class="tx"><div class="nm">${esc(itemName(c))}</div>
+      <div class="cd">${esc(c)} · <span class="meta">${esc(v.name || '?')} · ${esc(fmt(v.at))}${v.note ? ' · ' + esc(v.note) : ''}</span></div></div>
+      <button class="btn sm" data-ret="${esc(c)}">Visszahozta</button></div>`).join('') : `<div class="empty">Nincs kint eszköz.</div>`;
+  }
+  function onLoanCodes(codes) {
+    const m = byCode(); const c = codes.map(norm).find(x => m[x]);
+    if (!c) { const t = 'Ismeretlen kód: ' + codes.map(norm).join(', '); showMsg('#msgLoan', t, 'warn'); return t; }
+    if (S.loans[c]) { const t = `${itemName(c)} már kint van: ${S.loans[c].name}`; showMsg('#msgLoan', t, 'warn'); return t; }
+    $('#loanSel').value = c; showMsg('#msgLoan', '✔ ' + itemName(c), 'ok'); vib();
+    return '✔ ' + itemName(c);
+  }
+  $('#doLoan').addEventListener('click', async e => {
+    const c = $('#loanSel').value;
+    if (!c) return showMsg('#msgLoan', 'Válassz eszközt.', 'warn');
+    e.target.disabled = true; showMsg('#msgLoan', 'Mentés…', 'info');
+    try {
+      await api('loanOut', c, $('#loanHolder').value.trim(), $('#loanNote').value.trim());
+      const who = $('#loanHolder').value.trim() || (S.me ? S.me.name : '');
+      $('#loanSel').value = ''; $('#loanNote').value = ''; $('#loanHolder').value = '';
+      showMsg('#msgLoan', `Rögzítve: ${itemName(c)} → ${who}`, 'ok');
+      await refresh();
+    } catch (err) { showMsg('#msgLoan', errText(err), 'warn'); }
+    e.target.disabled = false;
+  });
+  $('#loanList').addEventListener('click', e => {
+    const b = e.target.closest('[data-ret]'); if (!b) return;
+    const c = b.dataset.ret;
+    confirmBox('Visszavétel', `<p><b>${esc(itemName(c))}</b> (${esc(c)}) visszakerült a dobozba?</p><p class="sub">Kint volt: ${esc(S.loans[c] ? S.loans[c].name : '')}</p>`, 'Visszavételezem', async () => {
+      try { await api('returnItem', c); toast('Visszavételezve.'); await refresh(); } catch (err) { toast(errText(err)); }
+    });
+  });
+
+  // ---------- napló ----------
+  function evHtml(e) {
+    const pill = {nyitas: 'acc', zaras: 'acc', ki: 'out', vissza: 'ok'}[e.t] || 'mute';
+    const names = arr => (arr || []).map(c => `${esc(itemName(c))} <span class="cd">(${esc(c)})</span>`);
+    let bd = '';
+    if (e.t === 'nyitas' || e.t === 'zaras') {
+      const got = (e.found || []).length + (e.manual || []).length;
+      bd = `<div class="chips"><span class="chip ok">${got} / ${esc(e.total || '?')} megvolt</span>` +
+        ((e.missing || []).length ? `<span class="chip bad">${e.missing.length} hiányzott</span>` : '') +
+        ((e.out || []).length ? `<span class="chip out">${e.out.length} kiadva</span>` : '') +
+        ((e.manual || []).length ? `<span class="chip warn">${e.manual.length} kézzel</span>` : '') + '</div>';
+      if ((e.missing || []).length) bd += `<div style="color:var(--bad);margin-top:6px;font-weight:600">Hiányzott:</div><ul>${names(e.missing).map(x => '<li>' + x + '</li>').join('')}</ul>`;
+      if ((e.manual || []).length) bd += `<div style="color:var(--warn);margin-top:6px;font-weight:600">Kézzel jelölve:</div><ul>${names(e.manual).map(x => '<li>' + x + '</li>').join('')}</ul>`;
+    } else bd = names(e.codes).join(', ');
+    return `<div class="ev"><div class="hd"><span class="chip ${pill}">${esc(TYPES[e.t] || e.t)}</span><span class="who">✍ ${esc(e.name || '—')}</span><span class="when">${esc(fmt(e.at))}</span></div>
+      <div class="bd">${bd}</div>${e.note ? `<div class="note">${esc(e.note)}</div>` : ''}</div>`;
+  }
+  function renderLog() {
+    const f = $('#logFilter').value;
+    const evs = S.events.filter(e =>
+      f === 'all' ? true :
+      f === 'check' ? (e.t === 'nyitas' || e.t === 'zaras') :
+      f === 'miss' ? ((e.t === 'nyitas' || e.t === 'zaras') && (e.missing || []).length) :
+      (e.t === 'ki' || e.t === 'vissza'));
+    $('#logList').innerHTML = evs.length ? evs.slice(0, 200).map(evHtml).join('') : `<div class="empty">Nincs bejegyzés.</div>`;
+    const ts = $('#trackSel'), cur = ts.value;
+    ts.innerHTML = '<option value="">– válassz eszközt –</option>' + S.items.map(it => `<option value="${esc(it.code)}">${esc(it.name)} (${esc(it.code)})</option>`).join('');
+    ts.value = cur;
+    renderTrack();
+  }
+  function renderTrack() {
+    const c = $('#trackSel').value;
+    if (!c) { $('#trackOut').innerHTML = ''; return; }
+    const rows = []; let lastSeen = null, firstMissAfter = null;
+    for (const e of S.events.slice().reverse()) {
+      let st = null, cls = '';
+      if (e.t === 'nyitas' || e.t === 'zaras') {
+        if ((e.found || []).includes(c)) { st = 'megvolt'; cls = 'ok'; }
+        else if ((e.manual || []).includes(c)) { st = 'megvolt (kézzel jelölve)'; cls = 'ok'; }
+        else if ((e.out || []).includes(c)) { st = 'kiadva volt'; cls = 'out'; }
+        else if ((e.missing || []).includes(c)) { st = 'HIÁNYZOTT'; cls = 'bad'; }
+      } else if ((e.codes || []).includes(c)) { st = e.t === 'ki' ? 'kiadva' : 'visszahozva'; cls = e.t === 'ki' ? 'out' : 'ok'; }
+      if (!st) continue;
+      if (cls === 'ok') { lastSeen = e; firstMissAfter = null; }
+      if (cls === 'bad' && !firstMissAfter) firstMissAfter = e;
+      rows.push({e, st, cls});
+    }
+    let sum = '';
+    const L = S.loans[c];
+    if (L) sum = `<div class="msg info" style="margin-top:10px">Jelenleg kint: <b>${esc(L.name)}</b> (${esc(fmt(L.at))})</div>`;
+    else if (firstMissAfter) sum = `<div class="msg warn" style="margin-top:10px">Utoljára megvolt: ${lastSeen ? `<b>${esc(TYPES[lastSeen.t])}</b>, ${esc(fmt(lastSeen.at))}, ${esc(lastSeen.name)}` : 'nincs adat'}<br>Először hiányzott: <b>${esc(TYPES[firstMissAfter.t])}</b>, ${esc(fmt(firstMissAfter.at))}, ${esc(firstMissAfter.name)}${lastSeen ? '<br>→ A két ellenőrzés közötti időszakban tűnt el.' : ''}</div>`;
+    else if (lastSeen) sum = `<div class="msg ok" style="margin-top:10px">Utoljára megvolt: ${esc(TYPES[lastSeen.t])}, ${esc(fmt(lastSeen.at))}, ${esc(lastSeen.name)}</div>`;
+    $('#trackOut').innerHTML = sum + (rows.length ? `<div class="tl" style="margin-top:10px">${rows.reverse().slice(0, 60).map(r =>
+      `<div class="it ${r.cls}"><b>${esc(r.st)}</b> <span class="sub">· ${esc(TYPES[r.e.t])} · ${esc(fmt(r.e.at))} · ${esc(r.e.name || '—')}</span></div>`).join('')}</div>` : `<div class="hint">Erről az eszközről még nincs bejegyzés.</div>`);
+  }
+  $('#logFilter').addEventListener('change', renderLog);
+  $('#trackSel').addEventListener('change', renderTrack);
+
+  // ---------- QR-címkék ----------
+  const MM = 300 / 25.4;
+  const LABEL = {normal: {w: 47, h: 28, cols: 4, rows: 9}, small: {w: 30, h: 20, cols: 6, rows: 13}};
+  function drawQR(g, text, x, y, size) {
+    const q = qrcode(0, 'M'); q.addData(text); q.make();
+    const n = q.getModuleCount(), cell = size / (n + 2);
+    g.fillStyle = '#fff'; g.fillRect(x, y, size, size); g.fillStyle = '#000';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c))
+      g.fillRect(Math.floor(x + (c + 1) * cell), Math.floor(y + (r + 1) * cell), Math.ceil(cell), Math.ceil(cell));
+  }
+  function wrap(g, text, maxW, maxLines) {
+    const tokens = String(text).split(/(?<=[\s-])/); const lines = []; let cur = '';
+    for (const t of tokens) { const test = cur + t; if (!cur || g.measureText(test.trim()).width <= maxW) cur = test; else { lines.push(cur.trim()); cur = t; } }
+    if (cur.trim()) lines.push(cur.trim());
+    if (lines.length > maxLines) { lines.length = maxLines; lines[maxLines - 1] = lines[maxLines - 1].replace(/.{0,1}$/, '…'); }
+    return lines;
+  }
+  function drawLabel(g, x, y, it, size) {
+    const cf = LABEL[size], w = cf.w * MM, h = cf.h * MM;
+    g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
+    g.strokeStyle = '#c4c8cf'; g.lineWidth = 2; g.setLineDash([14, 10]); g.strokeRect(x + 1, y + 1, w - 2, h - 2); g.setLineDash([]);
+    const pad = (size === 'small' ? 1.5 : 2) * MM, qs = h - 2 * pad;
+    drawQR(g, it.code, x + pad, y + pad, qs);
+    const tx = x + pad + qs + 1.2 * MM, tw = x + w - pad - tx;
+    g.fillStyle = '#000'; g.textBaseline = 'top';
+    if (size === 'small') {
+      g.font = `bold ${2.6 * MM}px Arial, sans-serif`;
+      wrap(g, it.code, tw, 4).forEach((l, i) => g.fillText(l, tx, y + pad + i * 3.2 * MM));
+    } else {
+      g.font = `${2.1 * MM}px Arial, sans-serif`; g.fillStyle = '#666';
+      let hd = S.boxName.toUpperCase(); while (hd.length > 1 && g.measureText(hd).width > tw) hd = hd.slice(0, -2) + '…';
+      g.fillText(hd, tx, y + pad);
+      g.fillStyle = '#000'; g.font = `bold ${3.3 * MM}px Arial, sans-serif`;
+      let yy = y + pad + 3.2 * MM;
+      for (const l of wrap(g, it.code, tw, 2)) { g.fillText(l, tx, yy); yy += 3.9 * MM; }
+      g.font = `${2.6 * MM}px Arial, sans-serif`; yy += 0.6 * MM;
+      for (const l of wrap(g, it.name, tw, 3)) { g.fillText(l, tx, yy); yy += 3.1 * MM; }
+    }
+    g.restore();
+  }
+  function labelItems() { const c = $('#labelCat').value; return S.items.filter(it => !c || (it.cat || 'Egyéb') === c); }
+  function drawPage(items, size) {
+    const cf = LABEL[size], W = 2480, H = 3508;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+    const mx = (W - cf.cols * cf.w * MM) / 2, my = (H - cf.rows * cf.h * MM) / 2;
+    items.forEach((it, i) => drawLabel(g, mx + (i % cf.cols) * cf.w * MM, my + Math.floor(i / cf.cols) * cf.h * MM, it, size));
+    return cv;
+  }
+  function pages() {
+    const size = $('#labelSize').value, per = LABEL[size].cols * LABEL[size].rows, its = labelItems(), out = [];
+    for (let i = 0; i < its.length; i += per) out.push(its.slice(i, i + per));
+    return {size, out};
+  }
+  function renderLabels() {
+    const cs = $('#labelCat'), cur = cs.value;
+    cs.innerHTML = '<option value="">Mind</option>' + cats().map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    cs.value = cats().includes(cur) ? cur : '';
+    const pv = $('#labelPreview');
+    if (!window.qrcode) { showMsg('#msgLabels', 'A QR-generátor nem töltődött be.', 'warn'); return; }
+    const {size, out} = pages();
+    if (!out.length) { pv.style.display = 'none'; $('#labelPages').textContent = 'Nincs eszköz.'; return; }
+    pv.style.display = 'block'; pv.width = 1240; pv.height = 1754;
+    pv.getContext('2d').drawImage(drawPage(out[0], size), 0, 0, 1240, 1754);
+    $('#labelPages').textContent = `${labelItems().length} címke, ${out.length} oldal. Előnézet: 1. oldal.`;
+  }
+  $('#labelSize').addEventListener('change', renderLabels);
+  $('#labelCat').addEventListener('change', renderLabels);
+  $('#dlLabels').addEventListener('click', async e => {
+    if (!window.jspdf) return showMsg('#msgLabels', 'A PDF-készítő nem töltődött be. Frissítsd az oldalt.', 'warn');
+    const {size, out} = pages(); if (!out.length) return;
+    e.target.disabled = true; showMsg('#msgLabels', 'PDF készítése…', 'info');
+    try {
+      const pdf = new jspdf.jsPDF({unit: 'mm', format: 'a4', orientation: 'portrait', compress: true});
+      out.forEach((items, i) => {
+        if (i) pdf.addPage('a4', 'portrait');
+        pdf.addImage(drawPage(items, size).toDataURL('image/png'), 'PNG', 0, 0, 210, 297, undefined, 'FAST');
+      });
+      const d = new Date(), stamp = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      pdf.save(`QR-cimkek-${size === 'small' ? 'kicsi' : 'normal'}-${stamp}.pdf`);
+      showMsg('#msgLabels', 'Kész, a PDF letöltődött.', 'ok');
+    } catch (err) { showMsg('#msgLabels', 'Nem sikerült: ' + errText(err), 'warn'); }
+    e.target.disabled = false;
+  });
+
+  // ---------- fülek ----------
+  function renderTab() {
+    if (S.tab === 'check') renderCheck();
+    if (S.tab === 'loan') renderLoan();
+    if (S.tab === 'log') renderLog();
+    if (S.tab === 'labels') renderLabels();
+  }
+  function renderAll() { renderHeader(); renderTab(); }
+  $('#tabs').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    S.tab = b.dataset.tab;
+    document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === 'tab-' + S.tab));
+    $('#checkActions').style.display = S.tab === 'check' ? 'block' : 'none';
+    renderTab();
+  });
+
+  bindScanner('#camCheck', '#codeCheck', '#codeCheckBtn', '#liveCheck', '#msgCheck', onCheckCodes, true);
+  bindScanner('#camLoan', '#codeLoan', '#codeLoanBtn', '#liveLoan', '#msgLoan', onLoanCodes, false);
+
+  // frissítés: induláskor, visszatéréskor, és percenként, ha nincs nyitva ablak
+  renderAll();
+  refresh();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  setInterval(() => { if (!document.hidden && !$('#modal').classList.contains('on')) refresh(); }, 60000);
+})();
+</script>
+</body>
+</html>
