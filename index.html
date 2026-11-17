@@ -212,8 +212,8 @@
   <!-- ELLENŐRZÉS -->
   <section id="tab-check" class="on">
     <div class="seg" id="typeSeg">
-      <button data-type="nyitas">Nyitás (kivétel előtt)</button>
-      <button data-type="zaras">Zárás (szekrénybe tétel előtt)</button>
+      <button data-type="nyitas">🔓 Kivétel</button>
+      <button data-type="zaras">🔒 Visszarakás</button>
     </div>
     <div class="card">
       <div class="scanbar">
@@ -313,7 +313,7 @@
 <div class="actions" id="checkActions">
   <div class="in">
     <button class="btn" id="resetDraft">Újrakezdés</button>
-    <button class="btn primary" id="finishCheck">Lezárás és aláírás</button>
+    <button class="btn primary" id="finishCheck">Aláírás és mentés</button>
   </div>
 </div>
 
@@ -339,7 +339,7 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
   const fmt = iso => { try { return new Date(iso).toLocaleString('hu-HU', {year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}); } catch (e) { return iso; } };
-  const TYPES = {nyitas:'Nyitás', zaras:'Zárás', ki:'Kiadás', vissza:'Visszavétel'};
+  const TYPES = {nyitas:'Kivétel', zaras:'Visszarakás', ki:'Kiadás', vissza:'Visszavétel'};
   const vib = () => { try { navigator.vibrate && navigator.vibrate(40); } catch (e) {} };
   // ---------- beállítások ----------
   const API_URL = 'https://script.google.com/macros/s/AKfycbwj7ZWnvuU_To7Jn5ZOUrBn-x592U9lRg0U_cd4l5NionWTi8MCKwI4pVG9PymZpr49/exec';
@@ -628,7 +628,7 @@
       }).join('');
       if (rows) h += `<div class="grp" style="--cat:${catColor(c)}">${esc(c)}</div>` + rows;
     }
-    const done = !st.missing.length ? `<div class="done">🎉 Minden megvan!<small>Nyomd meg a „Lezárás és aláírás” gombot.</small></div>` : '';
+    const done = !st.missing.length ? `<div class="done">🎉 Minden megvan!<small>Nyomd meg az „Aláírás és mentés” gombot.</small></div>` : '';
     $('#checkList').innerHTML = done + h;
     (S.flash || []).forEach(code => { const b = document.querySelector(`[data-undo="${CSS.escape(code)}"]`); if (b) b.closest('.row').classList.add('flash'); });
     S.flash = [];
