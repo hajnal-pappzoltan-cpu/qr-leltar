@@ -253,8 +253,9 @@
       <div class="msg" id="msgLoan"></div>
       <label class="f" for="loanSel">Eszköz</label>
       <select id="loanSel"></select>
-      <label class="f" for="loanHolder">Kinél lesz? (üresen hagyva: nálad)</label>
-      <input type="text" id="loanHolder" placeholder="pl. Kiss Bence 11.B">
+      <label class="f" for="loanHolder">Kinél lesz?</label>
+      <select id="loanHolder"><option value="">Nálam</option></select>
+      <input type="text" id="loanHolderOther" placeholder="Írd be a nevet, pl. Kiss Bence 11.B" style="display:none;margin-top:6px">
       <label class="f" for="loanNote">Mire / meddig? (nem kötelező)</label>
       <input type="text" id="loanNote" placeholder="pl. Jarvis projekt, péntekig">
       <div style="margin-top:12px"><button class="btn primary big" id="doLoan">Kiadás rögzítése</button></div>
@@ -422,10 +423,32 @@
   const catColor = c => PALETTE[Math.max(0, cats().indexOf(c)) % PALETTE.length];
   const cats = () => { const out = []; for (const it of S.items) { const c = it.cat || 'Egyéb'; if (!out.includes(c)) out.push(c); } return out; };
 
+  // ---------- „Kinél lesz?” legördülő a Jogosultak listából ----------
+  function holderVal() {
+    const v = $('#loanHolder').value;
+    if (v !== '__other') return v;
+    const t = $('#loanHolderOther').value.trim();
+    return t ? t : null;
+  }
+  function fillHolders() {
+    const sel = $('#loanHolder'), cur = sel.value, mine = S.me ? S.me.name : '';
+    const names = (S.people || []).filter(n => n && n !== mine);
+    sel.innerHTML = `<option value="">Nálam${mine ? ' (' + esc(mine) + ')' : ''}</option>` +
+      names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('') +
+      `<option value="__other">Más… (beírom a nevet)</option>`;
+    if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
+  }
+  $('#loanHolder').addEventListener('change', () => {
+    const o = $('#loanHolder').value === '__other';
+    $('#loanHolderOther').style.display = o ? '' : 'none';
+    if (o) $('#loanHolderOther').focus();
+  });
+
   async function refresh() {
     try {
       const st = await api('getState');
-      Object.assign(S, {me: st.me, title: st.title || 'Gokart terem leltár', allItems: (st.items || []).map(it => Object.assign({}, it, {box: it.box || 'Doboz'})), loans: st.loans, events: st.events, sheetUrl: st.sheetUrl, loaded: true});
+      Object.assign(S, {me: st.me, title: st.title || 'Gokart terem leltár', allItems: (st.items || []).map(it => Object.assign({}, it, {box: it.box || 'Doboz'})), loans: st.loans, events: st.events, sheetUrl: st.sheetUrl, people: st.people || [], loaded: true});
+      fillHolders();
       ensureBox();
       setConn('');
       renderAll();
@@ -729,9 +752,11 @@
     if (!c) return showMsg('#msgLoan', 'Válassz eszközt.', 'warn');
     e.target.disabled = true; showMsg('#msgLoan', 'Mentés…', 'info');
     try {
-      await api('loanOut', c, $('#loanHolder').value.trim(), $('#loanNote').value.trim());
-      const who = $('#loanHolder').value.trim() || (S.me ? S.me.name : '');
-      $('#loanSel').value = ''; $('#loanNote').value = ''; $('#loanHolder').value = '';
+      const holder = holderVal();
+      if (holder === null) { e.target.disabled = false; return showMsg('#msgLoan', 'Írd be, kinél lesz az eszköz.', 'warn'); }
+      await api('loanOut', c, holder, $('#loanNote').value.trim());
+      const who = holder || (S.me ? S.me.name : '');
+      $('#loanSel').value = ''; $('#loanNote').value = ''; $('#loanHolder').value = ''; $('#loanHolderOther').value = ''; $('#loanHolderOther').style.display = 'none';
       showMsg('#msgLoan', `Rögzítve: ${itemName(c)} → ${who}`, 'ok');
       await refresh();
     } catch (err) { showMsg('#msgLoan', errText(err), 'warn'); }
